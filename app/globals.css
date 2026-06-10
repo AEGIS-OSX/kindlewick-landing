@@ -79,22 +79,18 @@ body {
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* Focus ring — global default */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* Heading base */
 h1, h2, h3, h4 {
-  font-family: var(--font-display);
   overflow-wrap: anywhere;
   min-width: 0;
 }
