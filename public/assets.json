@@ -1,31 +1,31 @@
 {
   "hero": {
-    "url": "",
-    "alt": "",
+    "url": "https://zkvkbpxrxnfynqqeytke.supabase.co/storage/v1/object/public/marketing-assets/kindlewick-landing/cleo/1781053493360-hero.png",
+    "alt": "Hero image: left-aligned warm-cream negative space with a tall vertical crop of a hand-held candle in reclaimed glass on reclaimed wood, warm tungsten highlights and terracotta label accent. Fits the ",
     "width": 1920,
     "height": 1080
   },
   "feature_1": {
-    "url": "",
-    "alt": "",
+    "url": "https://zkvkbpxrxnfynqqeytke.supabase.co/storage/v1/object/public/marketing-assets/kindlewick-landing/cleo/1781053619896-feature_1.png",
+    "alt": "Feature 1 image: macro low-angle of molten soy wax pouring into a reclaimed glass vessel, highlighting texture, sheen, and wick placement. Matches tactile hand-pour craft and warm tungsten palette.",
     "width": 800,
     "height": 600
   },
   "feature_2": {
-    "url": "",
-    "alt": "",
+    "url": "https://zkvkbpxrxnfynqqeytke.supabase.co/storage/v1/object/public/marketing-assets/kindlewick-landing/cleo/1781053740120-feature_2.png",
+    "alt": "Feature 2 image ('Orchard Dusk'): finished candle on folded linen with a soft-focus sliced apple and brass spoon. Emphasizes textile texture and warm terracotta accents to match scent copy.",
     "width": 800,
     "height": 600
   },
   "feature_3": {
-    "url": "",
-    "alt": "",
+    "url": "https://zkvkbpxrxnfynqqeytke.supabase.co/storage/v1/object/public/marketing-assets/kindlewick-landing/cleo/1781053876613-feature_3.png",
+    "alt": "Feature 3 image ('Reading Rain'): cured candle on a reclaimed wood windowsill with rain-beaded glass and a partial hand, warm tungsten highlights with soft backlight. Evokes quiet evening reading and ",
     "width": 800,
     "height": 600
   },
   "social_proof": {
-    "url": "",
-    "alt": "",
+    "url": "https://zkvkbpxrxnfynqqeytke.supabase.co/storage/v1/object/public/marketing-assets/kindlewick-landing/cleo/1781053477570-social_proof.png",
+    "alt": "Handwritten waitlist postcard and Instagram placeholder card on warm cream paper beside a lit candle. Shallow DoF and warm 3200K practical lighting create an intimate background for testimonial copy a",
     "width": 1200,
     "height": 800
   }
