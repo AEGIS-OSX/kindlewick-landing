@@ -71,3 +71,66 @@ h6 {
 *::after {
   box-sizing: border-box;
 }
+
+/* === Kindlewick base styles === */
+html,
+body {
+  overflow-x: clip; /* clip not hidden — preserves position:sticky */
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus ring — global default */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Heading base */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-xs);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  padding: 8px 16px;
+  border-radius: var(--radius-m);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  z-index: 9999;
+  transition: top 0.2s ease-out;
+}
+.skip-link:focus {
+  top: var(--space-xs);
+}
+
+/* Section base */
+.section-cream {
+  background-color: var(--color-bg);
+}
+.section-forest {
+  background-color: var(--color-primary);
+  color: var(--color-bg);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
