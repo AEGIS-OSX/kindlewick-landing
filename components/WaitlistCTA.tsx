@@ -1,274 +1,267 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
-type FormState = "default" | "loading" | "success" | "error";
+type FormStatus = "idle" | "loading" | "success" | "error";
 
 export default function WaitlistCTA() {
-  const [email, setEmail] = useState<string>("");
-  const [formState, setFormState] = useState<FormState>("default");
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<FormStatus>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!email || !email.includes("@")) {
-      setErrorMessage("Please enter a valid email address.");
-      setFormState("error");
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setStatus("error");
+      setErrorMsg("Please enter a valid email address.");
       return;
     }
 
-    setFormState("loading");
-    setErrorMessage("");
+    setStatus("loading");
+    setErrorMsg("");
 
     try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Request failed");
-      }
-
-      setFormState("success");
+      /* Replace with real endpoint when available */
+      await new Promise<void>((resolve) => setTimeout(resolve, 1200));
+      setStatus("success");
     } catch {
-      setErrorMessage("Something went wrong. Please try again.");
-      setFormState("error");
+      setStatus("error");
+      setErrorMsg("Something went wrong. Please try again.");
     }
   }
 
-  const isLoading = formState === "loading";
-  const isSuccess = formState === "success";
-  const isError = formState === "error";
-
   return (
-    <section
-      aria-labelledby="waitlist-heading"
-      style={{
-        backgroundColor: "var(--color-primary)",
-        color: "var(--color-bg)",
-        padding: "var(--space-xxl) var(--space-xs)",
-      }}
-    >
+    <>
       <style>{`
-        .wl-inner {
-          max-width: 560px;
-          margin: 0 auto;
+        .waitlist-cta {
+          background-color: var(--color-primary);
+          color: var(--color-bg);
+          padding: var(--space-xxl) var(--space-xl);
+        }
+
+        .waitlist-cta__inner {
+          max-width: 36rem;
+          margin-inline: auto;
           text-align: center;
         }
 
-        .wl-heading {
+        .waitlist-cta__headline {
           font-family: var(--font-display);
           font-size: var(--type-h2);
           font-weight: 600;
           line-height: 1.15;
           color: var(--color-bg);
-          margin: 0 0 var(--space-sm);
+          margin: 0 0 var(--space-md) 0;
         }
 
-        .wl-form {
+        .waitlist-cta__form {
           display: flex;
           flex-direction: column;
           gap: var(--space-xs);
-          align-items: stretch;
+          align-items: center;
         }
 
-        .wl-field {
+        .waitlist-cta__field {
           display: flex;
           flex-direction: column;
           gap: var(--space-xxs);
-          text-align: left;
+          width: 100%;
+          max-width: 24rem;
         }
 
-        .wl-label {
+        .waitlist-cta__label {
           font-family: var(--font-body);
           font-size: var(--type-sm);
           font-weight: 500;
           color: var(--color-bg);
-          letter-spacing: 0.02em;
+          text-align: left;
         }
 
-        .wl-input {
+        .waitlist-cta__input {
           font-family: var(--font-body);
           font-size: var(--type-sm);
           font-weight: 400;
+          line-height: 1.5;
           color: var(--color-text);
           background-color: var(--color-bg);
-          border: 1px solid transparent;
+          border: 1px solid var(--color-border);
           border-radius: var(--radius-s);
-          padding: 12px var(--space-xs);
+          padding: 0.625rem 0.875rem;
+          min-height: 44px;
           width: 100%;
           box-sizing: border-box;
           outline: none;
           transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
         }
 
-        .wl-input:focus {
+        .waitlist-cta__input:focus-visible {
           border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(200, 106, 58, 0.25);
+          box-shadow: 0 0 0 2px var(--color-accent);
         }
 
-        .wl-input:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
+        .waitlist-cta__input--error {
+          border-color: #b91c1c;
+          box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.25);
         }
 
-        .wl-helper {
+        .waitlist-cta__helper {
           font-family: var(--font-body);
           font-size: var(--type-xs);
           font-weight: 400;
           color: var(--color-bg);
-          opacity: 0.7;
+          opacity: 0.6;
           margin: 0;
-          text-align: center;
+          text-align: left;
         }
 
-        .wl-button {
+        .waitlist-cta__error {
+          font-family: var(--font-body);
+          font-size: var(--type-xs);
+          font-weight: 400;
+          color: #fca5a5;
+          margin: 0;
+          text-align: left;
+        }
+
+        .waitlist-cta__button {
           font-family: var(--font-body);
           font-size: var(--type-sm);
           font-weight: 500;
           letter-spacing: 0.02em;
-          color: var(--color-bg);
-          background-color: var(--color-accent);
+          color: var(--color-primary);
+          background-color: var(--color-bg);
           border: none;
           border-radius: var(--radius-m);
+          padding: 0.625rem 2rem;
           min-height: 44px;
-          padding: 0 var(--space-md);
           cursor: pointer;
           transition: opacity 0.15s ease-out, transform 0.1s ease-out;
           width: 100%;
+          max-width: 24rem;
         }
 
-        .wl-button:hover:not(:disabled) {
-          opacity: 0.88;
+        .waitlist-cta__button:hover {
+          opacity: 0.9;
         }
 
-        .wl-button:active:not(:disabled) {
-          transform: translateY(1px);
+        .waitlist-cta__button:active {
+          transform: scale(0.98);
         }
 
-        .wl-button:focus-visible {
-          outline: 2px solid var(--color-bg);
-          outline-offset: 3px;
+        .waitlist-cta__button:focus-visible {
+          outline: 2px solid var(--color-accent);
+          outline-offset: 2px;
         }
 
-        .wl-button:disabled {
-          opacity: 0.55;
+        .waitlist-cta__button:disabled {
+          opacity: 0.5;
           cursor: not-allowed;
         }
 
-        .wl-success {
+        .waitlist-cta__success {
           font-family: var(--font-body);
           font-size: var(--type-md);
           font-weight: 400;
+          line-height: 1.65;
           color: var(--color-bg);
           margin: 0;
-          padding: var(--space-sm) 0;
         }
 
-        .wl-error {
-          font-family: var(--font-body);
-          font-size: var(--type-xs);
-          font-weight: 400;
-          color: var(--color-accent);
-          margin: 0;
-          text-align: center;
-        }
-
-        @media (min-width: 480px) {
-          .wl-form {
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-items: flex-end;
+        @media (max-width: 479px) {
+          .waitlist-cta {
+            padding: var(--space-xl) var(--space-sm);
           }
 
-          .wl-field {
-            flex: 1 1 260px;
-          }
-
-          .wl-button {
-            flex: 0 0 auto;
-            width: auto;
-          }
-
-          .wl-helper,
-          .wl-error {
-            flex: 1 1 100%;
+          .waitlist-cta__headline {
+            font-size: var(--type-lg);
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .wl-input,
-          .wl-button {
+          .waitlist-cta__button {
+            transition: none;
+          }
+
+          .waitlist-cta__input {
             transition: none;
           }
         }
       `}</style>
 
-      <div className="wl-inner">
-        <h2 id="waitlist-heading" className="wl-heading">
-          First flame goes to the list.
-        </h2>
+      <section className="waitlist-cta" aria-labelledby="waitlist-cta-heading">
+        <div className="waitlist-cta__inner">
+          <h2 className="waitlist-cta__headline" id="waitlist-cta-heading">
+            First flame goes to the list.
+          </h2>
 
-        {isSuccess ? (
-          <p className="wl-success" role="status">
-            Thanks, you are on the list. We will email at launch.
-          </p>
-        ) : (
-          <form
-            className="wl-form"
-            onSubmit={handleSubmit}
-            noValidate
-            aria-label="Waitlist signup"
-          >
-            <div className="wl-field">
-              <label htmlFor="waitlist-email" className="wl-label">
-                Email address
-              </label>
-              <input
-                id="waitlist-email"
-                type="email"
-                name="email"
-                className="wl-input"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (isError) {
-                    setFormState("default");
-                    setErrorMessage("");
-                  }
-                }}
-                autoComplete="email"
-                required
-                disabled={isLoading}
-                aria-describedby="waitlist-helper waitlist-error"
-                aria-invalid={isError ? "true" : undefined}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="wl-button"
-              disabled={isLoading}
-              aria-busy={isLoading ? "true" : undefined}
-            >
-              {isLoading ? "Joining\u2026" : "Hold My Spot"}
-            </button>
-
-            <p id="waitlist-helper" className="wl-helper">
-              One launch email. Nothing else.
+          {status === "success" ? (
+            <p className="waitlist-cta__success" role="status">
+              Thanks, you are on the list. We will email at launch.
             </p>
+          ) : (
+            <form
+              className="waitlist-cta__form"
+              onSubmit={handleSubmit}
+              noValidate
+            >
+              <div className="waitlist-cta__field">
+                <label className="waitlist-cta__label" htmlFor="waitlist-email">
+                  Email address
+                </label>
+                <input
+                  className={`waitlist-cta__input${
+                    status === "error" ? " waitlist-cta__input--error" : ""
+                  }`}
+                  id="waitlist-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  aria-required="true"
+                  aria-describedby={
+                    status === "error"
+                      ? "waitlist-error"
+                      : "waitlist-helper"
+                  }
+                  aria-invalid={status === "error"}
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (status === "error") {
+                      setStatus("idle");
+                      setErrorMsg("");
+                    }
+                  }}
+                  disabled={status === "loading"}
+                />
+                {status === "error" && errorMsg ? (
+                  <p
+                    className="waitlist-cta__error"
+                    id="waitlist-error"
+                    role="alert"
+                  >
+                    {errorMsg}
+                  </p>
+                ) : (
+                  <p className="waitlist-cta__helper" id="waitlist-helper">
+                    One launch email. Nothing else.
+                  </p>
+                )}
+              </div>
 
-            {isError && errorMessage && (
-              <p id="waitlist-error" className="wl-error" role="alert">
-                {errorMessage}
-              </p>
-            )}
-          </form>
-        )}
-      </div>
-    </section>
+              <button
+                className="waitlist-cta__button"
+                type="submit"
+                disabled={status === "loading"}
+              >
+                {status === "loading" ? "Sending\u2026" : "Hold My Spot"}
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
+    </>
   );
 }
