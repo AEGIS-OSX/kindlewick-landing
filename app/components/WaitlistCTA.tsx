@@ -1,58 +1,65 @@
 "use client";
-import { useState, useId, useReducer } from "react";
+
+import { useReducer, useId, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type FormState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "success" }
-  | { status: "error"; message: string };
+/* ── state machine ─────────────────────────────────────── */
+type Status = "idle" | "loading" | "success" | "error";
+
+interface State {
+  status: Status;
+  email: string;
+  errorMsg: string;
+}
 
 type Action =
+  | { type: "SET_EMAIL"; payload: string }
   | { type: "SUBMIT" }
   | { type: "SUCCESS" }
-  | { type: "ERROR"; message: string }
+  | { type: "ERROR"; payload: string }
   | { type: "RESET" };
 
-function formReducer(state: FormState, action: Action): FormState {
+function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case "SET_EMAIL":
+      return { ...state, email: action.payload, errorMsg: "" };
     case "SUBMIT":
-      return { status: "loading" };
+      return { ...state, status: "loading", errorMsg: "" };
     case "SUCCESS":
-      return { status: "success" };
+      return { ...state, status: "success" };
     case "ERROR":
-      return { status: "error", message: action.message };
+      return { ...state, status: "error", errorMsg: action.payload };
     case "RESET":
-      return { status: "idle" };
+      return { status: "idle", email: "", errorMsg: "" };
     default:
       return state;
   }
 }
 
-function validateEmail(value: string): string | null {
-  if (!value.trim()) return "Email address is required.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-    return "Please enter a valid email address.";
-  return null;
-}
+const initial: State = { status: "idle", email: "", errorMsg: "" };
 
+/* ── animation variants ────────────────────────────────── */
+const fade = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+  exit: { opacity: 0, y: -4, transition: { duration: 0.15, ease: "easeOut" } },
+};
+
+/* ── component ─────────────────────────────────────────── */
 export function WaitlistCTA() {
+  const [state, dispatch] = useReducer(reducer, initial);
   const emailId = useId();
+  const helperId = useId();
   const errorId = useId();
-  const [email, setEmail] = useState("");
-  const [touched, setTouched] = useState(false);
-  const [formState, dispatch] = useReducer(formReducer, { status: "idle" });
 
-  const inlineError = touched ? validateEmail(email) : null;
-  const isLoading = formState.status === "loading";
-  const isSuccess = formState.status === "success";
-  const isServerError = formState.status === "error";
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setTouched(true);
-    const validationError = validateEmail(email);
-    if (validationError) return;
+    const trimmed = state.email.trim();
+
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      dispatch({ type: "ERROR", payload: "Please enter a valid email address." });
+      return;
+    }
 
     dispatch({ type: "SUBMIT" });
 
@@ -60,208 +67,116 @@ export function WaitlistCTA() {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: trimmed }),
       });
-
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { message?: string };
-        dispatch({
-          type: "ERROR",
-          message: data.message ?? "Something went wrong. Please try again.",
-        });
-        return;
-      }
-
+      if (!res.ok) throw new Error("Request failed");
       dispatch({ type: "SUCCESS" });
     } catch {
-      dispatch({
-        type: "ERROR",
-        message: "Could not connect. Please check your connection and try again.",
-      });
+      dispatch({ type: "ERROR", payload: "Something went wrong. Please try again." });
     }
   }
 
+  const isLoading = state.status === "loading";
+
   return (
     <section
-      id="waitlist"
+      className="bg-[var(--color-primary)] text-[var(--color-bg)] py-[var(--space-xxl)] px-[var(--space-md)]"
       aria-labelledby="waitlist-heading"
-      className="bg-[var(--color-primary)] py-[var(--space-xxl)] px-[var(--space-xs)] sm:px-[var(--space-md)]"
     >
-      <div className="max-w-2xl mx-auto">
-        {/* Section label */}
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="text-[var(--color-accent)] font-[family-name:var(--font-body)] text-[length:var(--type-xs)] tracking-[0.1em] uppercase mb-[var(--space-sm)]"
-        >
-          Join the Waitlist
-        </motion.p>
-
-        {/* Heading */}
-        <motion.h2
+      <div className="mx-auto max-w-[480px] text-center">
+        <h2
           id="waitlist-heading"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
-          className="font-[family-name:var(--font-display)] text-[var(--color-bg)] text-[length:var(--type-h2)] leading-[1.1] font-semibold mb-[var(--space-lg)]"
+          className="font-[var(--font-display)] text-[var(--type-h2)] font-semibold leading-[1.15] mb-[var(--space-md)] text-[var(--color-bg)]"
         >
           First flame goes to the list.
-        </motion.h2>
+        </h2>
 
-        {/* Form / Success swap */}
         <AnimatePresence mode="wait">
-          {isSuccess ? (
-            <motion.div
+          {state.status === "success" ? (
+            <motion.p
               key="success"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              {...fade}
               role="status"
-              aria-live="polite"
-              className="flex flex-col gap-[var(--space-sm)]"
+              className="font-[var(--font-body)] text-[var(--type-md)] text-[var(--color-bg)] leading-relaxed"
             >
-              <p className="font-[family-name:var(--font-body)] text-[var(--color-bg)] text-[length:var(--type-md)] leading-[1.6]">
-                Thanks, you are on the list. We will email at launch.
-              </p>
-              <a
-                href="https://www.instagram.com/kindlewickcandles"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-[var(--space-xxs)] font-[family-name:var(--font-body)] font-medium text-[length:var(--type-sm)] text-[var(--color-bg)] underline underline-offset-4 decoration-[var(--color-accent)] hover:opacity-80 transition-opacity duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-bg)]"
-              >
-                Follow us on Instagram
-              </a>
-            </motion.div>
+              Thanks, you are on the list. We will email at launch.
+            </motion.p>
           ) : (
             <motion.form
               key="form"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              {...fade}
+              className="flex flex-col gap-[var(--space-xs)]"
               onSubmit={handleSubmit}
               noValidate
-              aria-label="Waitlist sign-up form"
-              className="flex flex-col gap-[var(--space-xs)]"
             >
-              {/* Input row */}
-              <div className="flex flex-col sm:flex-row gap-[var(--space-xxs)]">
-                <div className="flex flex-col flex-1 gap-[var(--space-xxs)]">
-                  <label
-                    htmlFor={emailId}
-                    className="font-[family-name:var(--font-body)] text-[var(--color-bg)] text-[length:var(--type-xs)] opacity-80"
-                  >
-                    Email address
-                  </label>
-                  <input
-                    id={emailId}
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (!touched) setTouched(true);
-                    }}
-                    onBlur={() => setTouched(true)}
-                    disabled={isLoading}
-                    aria-required="true"
-                    aria-invalid={inlineError !== null ? "true" : "false"}
-                    aria-describedby={
-                      inlineError
-                        ? errorId
-                        : isServerError
-                        ? errorId
-                        : undefined
-                    }
-                    placeholder="you@example.com"
-                    className=[
-                      "h-11 min-h-[44px] w-full px-[var(--space-xs)] rounded-[var(--radius-m)]",
-                      "bg-[rgba(247,243,232,0.08)] border border-[rgba(247,243,232,0.2)]",
-                      "font-[family-name:var(--font-body)] text-[var(--color-bg)] text-[length:var(--type-sm)] placeholder:text-[var(--color-bg)] placeholder:opacity-40",
-                      "transition-colors duration-200",
-                      "focus:outline-none focus:border-[var(--color-bg)] focus:bg-[rgba(247,243,232,0.12)]",
-                      "disabled:opacity-50 disabled:cursor-not-allowed",
-                      inlineError ? "border-[var(--color-accent)]" : "",
-                    ].join(" ")
-                  />
-                </div>
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  aria-disabled={isLoading}
-                  className=[
-                    "self-end h-11 min-h-[44px] px-[var(--space-md)] rounded-[var(--radius-m)]",
-                    "bg-[var(--color-bg)] text-[var(--color-primary)]",
-                    "font-[family-name:var(--font-body)] font-medium text-[length:var(--type-sm)] tracking-[0.02em]",
-                    "transition-opacity duration-200 hover:opacity-90",
-                    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-bg)]",
-                    "disabled:opacity-50 disabled:cursor-not-allowed",
-                    "whitespace-nowrap",
-                  ].join(" ")
+              <div className="flex flex-col gap-[var(--space-xxs)] text-left">
+                <label
+                  htmlFor={emailId}
+                  className="font-[var(--font-body)] text-[var(--type-sm)] font-medium text-[var(--color-bg)]"
                 >
-                  {isLoading ? (
-                    <span className="flex items-center gap-[var(--space-xxs)]" aria-label="Submitting">
-                      <svg
-                        className="animate-spin h-4 w-4 text-[var(--color-primary)]"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-                      <span>Saving…</span>
-                    </span>
-                  ) : (
-                    "Hold My Spot"
-                  )}
-                </button>
+                  Email address
+                </label>
+                <input
+                  id={emailId}
+                  type="email"
+                  value={state.email}
+                  onChange={(e) => dispatch({ type: "SET_EMAIL", payload: e.target.value })}
+                  disabled={isLoading}
+                  aria-describedby={`${helperId} ${errorId}`}
+                  aria-invalid={state.status === "error"}
+                  autoComplete="email"
+                  required
+                  className={[
+                    "font-[var(--font-body)] text-[var(--type-sm)]",
+                    "px-[var(--space-xs)] py-[var(--space-xxs)] min-h-[44px]",
+                    "border border-[var(--color-bg)] rounded-[var(--radius-s)]",
+                    "bg-transparent text-[var(--color-bg)] outline-none",
+                    "transition-[border-color,box-shadow] duration-200 ease-out",
+                    "focus-visible:shadow-[0_0_0_2px_var(--color-bg)]",
+                    "disabled:opacity-60 disabled:cursor-not-allowed",
+                    state.status === "error"
+                      ? "border-[#fca5a5] shadow-[0_0_0_2px_rgba(185,28,28,0.25)]"
+                      : "",
+                  ].join(" ")}
+                />
               </div>
 
-              {/* Inline validation / server error */}
+              <p
+                id={helperId}
+                className="font-[var(--font-body)] text-[var(--type-xs)] text-[var(--color-muted)] text-left m-0"
+              >
+                One launch email. Nothing else.
+              </p>
+
               <AnimatePresence>
-                {(inlineError || isServerError) && (
+                {state.status === "error" && state.errorMsg && (
                   <motion.p
-                    key="error"
+                    {...fade}
                     id={errorId}
                     role="alert"
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="font-[family-name:var(--font-body)] text-[var(--color-accent)] text-[length:var(--type-xs)] leading-[1.5]"
+                    className="font-[var(--font-body)] text-[var(--type-xs)] text-[#fca5a5] text-left m-0"
                   >
-                    {inlineError ??
-                      (formState.status === "error" ? formState.message : "")}
+                    {state.errorMsg}
                   </motion.p>
                 )}
               </AnimatePresence>
 
-              {/* Helper microcopy */}
-              {!inlineError && !isServerError && (
-                <p className="font-[family-name:var(--font-body)] text-[var(--color-bg)] text-[length:var(--type-xs)] opacity-50">
-                  One launch email. Nothing else.
-                </p>
-              )}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={[
+                  "font-[var(--font-body)] text-[var(--type-sm)] font-medium tracking-[0.02em]",
+                  "min-h-[44px] px-[var(--space-md)] py-[var(--space-xxs)]",
+                  "border-none rounded-[var(--radius-m)]",
+                  "bg-[var(--color-bg)] text-[var(--color-primary)] cursor-pointer",
+                  "transition-opacity duration-200 ease-out",
+                  "hover:enabled:opacity-90",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-bg)] focus-visible:outline-offset-2",
+                  "disabled:opacity-60 disabled:cursor-not-allowed",
+                ].join(" ")}
+              >
+                {isLoading ? "Sending\u2026" : "Hold My Spot"}
+              </button>
             </motion.form>
           )}
         </AnimatePresence>
