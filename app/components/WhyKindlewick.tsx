@@ -65,7 +65,7 @@ export function WhyKindlewick() {
             Why Kindlewick
           </motion.h2>
 
-          <ul role="list" className="space-y-0">
+          <ul role="list">
             {trustPoints.map((point, index) => (
               <motion.li
                 key={point.id}
